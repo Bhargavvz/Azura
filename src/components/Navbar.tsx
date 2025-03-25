@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Sparkles } from 'lucide-react';
 
 export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -35,14 +35,11 @@ export function Navbar() {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
-          <Link to="/" className="flex items-center space-x-3">
-            <img src="/photos/logo.png" alt="CMR Logo" className="h-12 w-12" />
-            <div className="flex flex-col">
-              <span className="font-bold text-2xl bg-clip-text text-transparent bg-gradient-to-r from-sky-400 to-indigo-400">
-                AZURA 2025
-              </span>
-              <span className="text-xs text-indigo-300">CSE Department</span>
-            </div>
+          <Link to="/" className="flex items-center space-x-2">
+            <Sparkles className="h-7 w-7 text-indigo-400" />
+            <span className="font-bold text-2xl bg-clip-text text-transparent bg-gradient-to-r from-sky-400 to-indigo-400">
+              AZURA 2025
+            </span>
           </Link>
           
           {/* Desktop Navigation */}

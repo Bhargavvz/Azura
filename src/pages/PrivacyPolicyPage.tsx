@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { ArrowLeft, Shield, Lock, Eye, Share2, Trash2 } from 'lucide-react';
+import { ArrowLeft, Shield, Mail } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export function PrivacyPolicyPage() {

@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { ArrowLeft, Cookie, Shield, Eye, Settings } from 'lucide-react';
+import { ArrowLeft, Cookie, Shield, Eye, Settings, Mail } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export function CookiePolicyPage() {

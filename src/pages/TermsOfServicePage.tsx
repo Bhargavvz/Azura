@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { ArrowLeft, Scale, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
+import { ArrowLeft, Scale, AlertCircle, CheckCircle, XCircle, Mail } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export function TermsOfServicePage() {
