@@ -6,6 +6,9 @@ import { HomePage } from './pages/HomePage';
 import { TechnicalEventsPage } from './pages/TechnicalEventsPage';
 import { NonTechnicalEventsPage } from './pages/NonTechnicalEventsPage';
 import { RegistrationPage } from './pages/RegistrationPage';
+import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage';
+import { TermsOfServicePage } from './pages/TermsOfServicePage';
+import { CookiePolicyPage } from './pages/CookiePolicyPage';
 
 function App() {
   return (
@@ -40,6 +43,9 @@ function App() {
             <Route path="/technical" element={<TechnicalEventsPage />} />
             <Route path="/non-technical" element={<NonTechnicalEventsPage />} />
             <Route path="/register" element={<RegistrationPage />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+            <Route path="/terms-of-service" element={<TermsOfServicePage />} />
+            <Route path="/cookie-policy" element={<CookiePolicyPage />} />
           </Routes>
         </main>
         <Footer />

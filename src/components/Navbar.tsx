@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Sparkles } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 
 export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -35,11 +35,14 @@ export function Navbar() {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
-          <Link to="/" className="flex items-center space-x-2">
-            <Sparkles className="h-7 w-7 text-indigo-400" />
-            <span className="font-bold text-2xl bg-clip-text text-transparent bg-gradient-to-r from-sky-400 to-indigo-400">
-              AZURA 2025
-            </span>
+          <Link to="/" className="flex items-center space-x-3">
+            <img src="/photos/logo.png" alt="CMR Logo" className="h-12 w-12" />
+            <div className="flex flex-col">
+              <span className="font-bold text-2xl bg-clip-text text-transparent bg-gradient-to-r from-sky-400 to-indigo-400">
+                AZURA 2025
+              </span>
+              <span className="text-xs text-indigo-300">CSE Department</span>
+            </div>
           </Link>
           
           {/* Desktop Navigation */}
@@ -95,18 +98,17 @@ export function Navbar() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.3 }}
-              className="md:hidden overflow-hidden bg-slate-800/90 backdrop-blur-lg mt-2 rounded-xl border border-indigo-500/20 shadow-xl"
+              className="md:hidden overflow-hidden bg-gradient-to-b from-slate-900/90 to-indigo-900/90 backdrop-blur-md border-t border-indigo-500/20"
             >
-              <div className="px-2 pt-2 pb-3 space-y-1">
+              <div className="px-4 py-6 space-y-4">
                 {navLinks.map((link) => (
                   <Link
                     key={link.path}
                     to={link.path}
-                    className={`block px-4 py-3 rounded-lg transition-colors ${
-                      location.pathname === link.path
-                        ? 'bg-indigo-500/20 text-white'
-                        : 'text-indigo-100 hover:bg-indigo-500/10 hover:text-white'
+                    className={`block px-4 py-2 rounded-lg text-sky-100 hover:text-white transition-colors ${
+                      location.pathname === link.path 
+                        ? 'bg-indigo-500/20 text-white' 
+                        : ''
                     }`}
                     onClick={() => setIsMenuOpen(false)}
                   >
@@ -115,15 +117,10 @@ export function Navbar() {
                 ))}
                 <Link
                   to="/register"
-                  className="block mt-4 mx-2"
+                  className="block px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg text-white font-medium hover:from-indigo-600 hover:to-purple-600 text-center"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  <motion.button
-                    whileTap={{ scale: 0.95 }}
-                    className="w-full py-3 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg text-white font-medium hover:from-indigo-600 hover:to-purple-600 transition-colors"
-                  >
-                    Register Now
-                  </motion.button>
+                  Register Now
                 </Link>
               </div>
             </motion.div>

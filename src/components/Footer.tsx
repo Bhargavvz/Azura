@@ -11,6 +11,7 @@ import {
   ChevronRight,
   Sparkles 
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export function Footer() {
   return (
@@ -72,12 +73,18 @@ export function Footer() {
               Quick Links
             </h3>
             <ul className="space-y-3">
-              {['Home', 'Technical Events', 'Non-Technical Events', 'Register', 'About Us'].map((item, i) => (
+              {[
+                { path: '/', label: 'Home' },
+                { path: '/technical', label: 'Technical Events' },
+                { path: '/non-technical', label: 'Non-Technical Events' },
+                { path: '/register', label: 'Register' },
+                { path: '/about', label: 'About Us' }
+              ].map((item, i) => (
                 <li key={i}>
-                  <a href="#" className="text-indigo-200 hover:text-white transition-colors inline-flex items-center space-x-1 group">
+                  <Link to={item.path} className="text-indigo-200 hover:text-white transition-colors inline-flex items-center space-x-1 group">
                     <ChevronRight className="w-4 h-4 text-indigo-500 transform group-hover:translate-x-1 transition-transform" />
-                    <span>{item}</span>
-                  </a>
+                    <span>{item.label}</span>
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -139,12 +146,25 @@ export function Footer() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ delay: 0.3 }}
-          className="mt-16 pt-8 border-t border-indigo-500/20 text-center text-indigo-300 text-sm"
+          className="mt-16 pt-8 border-t border-indigo-500/20"
         >
-          <p>
-            © 2025 AZURA - Department of Computer Science & Technology. All rights reserved.
-          </p>
-          <p className="mt-2 text-indigo-400">
+          <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+            <p className="text-center text-indigo-300 text-sm">
+              © 2025 AZURA - Department of Computer Science & Technology. All rights reserved.
+            </p>
+            <div className="flex space-x-6 text-sm">
+              <Link to="/privacy-policy" className="text-indigo-300 hover:text-white transition-colors">
+                Privacy Policy
+              </Link>
+              <Link to="/terms-of-service" className="text-indigo-300 hover:text-white transition-colors">
+                Terms of Service
+              </Link>
+              <Link to="/cookie-policy" className="text-indigo-300 hover:text-white transition-colors">
+                Cookie Policy
+              </Link>
+            </div>
+          </div>
+          <p className="mt-4 text-center text-indigo-400">
             Designed with <span className="text-pink-500">♥</span> for CMRCET
           </p>
         </motion.div>
