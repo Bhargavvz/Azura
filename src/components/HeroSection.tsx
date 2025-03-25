@@ -124,7 +124,7 @@ export function HeroSection() {
             />
           </h2>
           <p className="text-xl text-sky-200 font-light max-w-2xl mx-auto">
-            Department of Computer Science & Technology
+            Department of Computer Science & Engineering
           </p>
           <div className="inline-flex items-center justify-center space-x-3 text-xl bg-white/10 backdrop-blur-md rounded-full py-3 px-6 border border-white/20">
             <Calendar className="w-6 h-6 text-indigo-300" />

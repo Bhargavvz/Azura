@@ -20,7 +20,6 @@ export function Navbar() {
     { path: '/', label: 'Home' },
     { path: '/technical', label: 'Technical Events' },
     { path: '/non-technical', label: 'Non-Technical Events' },
-    { path: '/register', label: 'Register' }
   ];
 
   return (
@@ -67,7 +66,7 @@ export function Navbar() {
               </Link>
             ))}
             
-            <Link to="/register" className="ml-4">
+            <Link to="/register">
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}

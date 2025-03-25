@@ -1,82 +1,81 @@
 import { motion } from 'framer-motion';
-import { Clock, Users, Tag } from 'lucide-react';
+import { CalendarDays, Users, Tag } from 'lucide-react';
 
 interface EventCardProps {
-  title: string;
-  description: string;
-  image: string;
-  teamSize: string;
-  fee: {
-    csi: string;
-    nonCsi: string;
+  event: {
+    title: string;
+    description: string;
+    image: string;
+    teamSize: string;
+    fee: {
+      csi: string;
+      nonCsi: string;
+    };
   };
-  onClick: () => void;
 }
 
-export function EventCard({ title, description, image, teamSize, fee, onClick }: EventCardProps) {
+export function EventCard({ event }: EventCardProps) {
+  if (!event) {
+    return null;
+  }
+
   return (
     <motion.div
-      whileHover={{ y: -8, boxShadow: "0 20px 40px rgba(0, 0, 0, 0.3)" }}
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.4 }}
-      onClick={onClick}
-      className="relative group h-full bg-gradient-to-br from-slate-800/90 to-slate-900/90 backdrop-blur-md rounded-2xl overflow-hidden border border-indigo-500/20 shadow-xl cursor-pointer"
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      className="relative flex flex-col h-[400px] rounded-lg overflow-hidden border border-indigo-600/30"
     >
-      {/* Hover Gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/30 to-purple-600/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10"></div>
-      
-      {/* Image Container */}
-      <div className="relative h-48 overflow-hidden">
+      {/* Background Image with Overlay */}
+      <div className="absolute inset-0 z-0">
         <img
-          src={image}
-          alt={title}
-          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+          src={event.image}
+          alt={event.title}
+          className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/50 to-transparent"></div>
-        
-        {/* Card Tag - positioned on the image */}
-        <div className="absolute top-3 left-3 z-20 bg-indigo-600/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-medium text-white shadow-lg flex items-center space-x-1">
-          <Clock className="w-3 h-3 mr-1" />
-          <span>April 3, 2025</span>
-        </div>
+        <div className="absolute inset-0 bg-gradient-to-t from-[#080A1A] via-[#0A0E2A]/90 to-[#0A0E2A]/80" />
       </div>
 
-      {/* Content */}
-      <div className="p-6 relative z-20">
-        <h3 className="text-xl font-bold text-white mb-2 group-hover:text-indigo-300 transition-colors">{title}</h3>
-        <p className="text-sky-200 text-sm mb-4 line-clamp-2">{description}</p>
-        
-        {/* Details */}
-        <div className="space-y-3">
-          <div className="flex items-center text-sm">
-            <Users className="w-4 h-4 mr-2 text-indigo-400" />
-            <span className="text-indigo-200">Team Size: <span className="text-white font-medium">{teamSize}</span></span>
+      {/* Content Container */}
+      <div className="relative z-10 flex flex-col h-full p-4">
+        {/* Date */}
+        <div className="flex items-center gap-2 text-blue-400 bg-blue-900/30 self-start px-2 py-1 rounded-full">
+          <CalendarDays className="w-4 h-4" />
+          <span className="text-xs font-medium">April 3, 2025</span>
+        </div>
+
+        {/* Spacer to push content to middle */}
+        <div className="flex-grow min-h-[60px]"></div>
+
+        {/* Title and Description */}
+        <div className="mb-4">
+          <h3 className="text-2xl font-bold text-white mb-2">{event.title}</h3>
+          <p className="text-gray-300 text-sm line-clamp-2">{event.description}</p>
+        </div>
+
+        {/* Team Size */}
+        <div className="flex items-center gap-2 text-gray-300 mb-2">
+          <Users className="w-4 h-4 text-blue-400" />
+          <span className="text-sm">Team Size: {event.teamSize}</span>
+        </div>
+
+        {/* Fee Information */}
+        <div className="flex flex-col gap-1 mb-6">
+          <div className="flex items-center gap-2 text-sm">
+            <Tag className="w-4 h-4 text-blue-400" />
+            <span className="text-gray-300">CSI: </span>
+            <span className="text-blue-400 font-medium">{event.fee.csi}</span>
           </div>
-          
-          <div className="flex items-center text-sm">
-            <Tag className="w-4 h-4 mr-2 text-indigo-400" />
-            <span className="text-indigo-200 flex flex-col">
-              <span>CSI: <span className="text-white font-medium">{fee.csi}</span></span>
-              <span>Non-CSI: <span className="text-white font-medium">{fee.nonCsi}</span></span>
-            </span>
+          <div className="flex items-center gap-2 text-sm">
+            <div className="w-4"></div>
+            <span className="text-gray-300">Non-CSI: </span>
+            <span className="text-blue-400 font-medium">{event.fee.nonCsi}</span>
           </div>
         </div>
-        
-        {/* View Button */}
-        <div className="mt-6">
-          <motion.button 
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="w-full py-2 px-4 bg-gradient-to-r from-indigo-500/30 to-purple-500/30 hover:from-indigo-500/50 hover:to-purple-500/50 rounded-lg text-white text-sm font-medium border border-indigo-500/40 backdrop-blur-sm transition-all duration-300"
-          >
-            View Details
-          </motion.button>
-        </div>
-        
-        {/* Corner Accent */}
-        <div className="absolute -bottom-3 -right-3 w-16 h-16 bg-gradient-to-br from-indigo-500/30 to-purple-500/30 rounded-full blur-xl"></div>
+
+        {/* View Details Button */}
+        <button className="w-full py-3 text-center text-sm font-medium text-white bg-blue-900/50 hover:bg-blue-800/70 border border-blue-600/30 rounded-lg transition-colors">
+          View Details
+        </button>
       </div>
     </motion.div>
   );

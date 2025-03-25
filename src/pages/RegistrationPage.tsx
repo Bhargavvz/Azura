@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, User, Mail, Phone, Building, Hash, BookOpen, GraduationCap, CheckCircle, Users } from 'lucide-react';
+import { ArrowLeft, User, Mail, Phone, Building, Hash, BookOpen, GraduationCap, CheckCircle, CreditCard } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 import { toast } from 'react-hot-toast';
 
@@ -23,24 +23,25 @@ const departments = [
 
 // Sample event data
 const allEvents = [
-  { title: 'Blind Coding', category: 'Technical' },
-  { title: 'Tech Relay', category: 'Technical' },
-  { title: 'DevDash', category: 'Technical' },
-  { title: 'Bug Hunt', category: 'Technical' },
-  { title: 'Crack It Up 2.0', category: 'Technical' },
-  { title: 'PPT Presentation', category: 'Technical' },
-  { title: 'Freshman Code Cup', category: 'Technical' },
-  { title: 'Coding Premier League', category: 'Technical' },
-  { title: 'Poster Presentation with AI', category: 'Technical' },
-  { title: 'Musical Feast', category: 'Non-Technical' },
-  { title: 'Box Office Battle', category: 'Non-Technical' },
-  { title: 'Wordless Wonder', category: 'Non-Technical' },
-  { title: 'Try Not to Laugh', category: 'Non-Technical' },
-  { title: 'Treasure Hunt', category: 'Non-Technical' },
-  { title: 'Tollywood Trivia', category: 'Non-Technical' },
-  { title: 'Musical Ball Tag', category: 'Non-Technical' },
-  { title: 'Dance Workshop', category: 'Non-Technical' },
-  { title: 'Free Fire Tournament', category: 'Non-Technical' }
+  { title: 'Blind Coding', category: 'Technical', teamSize: '1-2', fee: { csi: '150', nonCsi: '200' } },
+  { title: 'Tech Relay', category: 'Technical', teamSize: '1-2', fee: { csi: '150', nonCsi: '200' } },
+  { title: 'DevDash', category: 'Technical', teamSize: '1-2', fee: { csi: '100', nonCsi: '100' } },
+  { title: 'Bug Hunt', category: 'Technical', teamSize: '1-2', fee: { csi: '150', nonCsi: '200' } },
+  { title: 'Crack It Up 2.0', category: 'Technical', teamSize: '1-2', fee: { csi: '150', nonCsi: '200' } },
+  { title: 'PPT Presentation', category: 'Technical', teamSize: '1-2', fee: { csi: '150', nonCsi: '200' } },
+  { title: 'Freshman Code Cup', category: 'Technical', teamSize: '1', fee: { csi: '150', nonCsi: '150' } },
+  { title: 'Coding Premier League', category: 'Technical', teamSize: '1-2', fee: { csi: '150', nonCsi: '200' } },
+  { title: 'Poster Presentation with AI', category: 'Technical', teamSize: '1-2', fee: { csi: '150', nonCsi: '200' } },
+  { title: 'Predict & Win', category: 'Technical', teamSize: '1-2', fee: { csi: '150', nonCsi: '200' } },
+  { title: 'Musical Feast', category: 'Non-Technical', teamSize: '1-2', fee: { csi: '150', nonCsi: '200' } },
+  { title: 'Box Office Battle', category: 'Non-Technical', teamSize: '1-2', fee: { csi: '150', nonCsi: '200' } },
+  { title: 'Wordless Wonder', category: 'Non-Technical', teamSize: '1-2', fee: { csi: '150', nonCsi: '200' } },
+  { title: 'Try Not to Laugh', category: 'Non-Technical', teamSize: '1-2', fee: { csi: '150', nonCsi: '200' } },
+  { title: 'Tech Treasure', category: 'Non-Technical', teamSize: '1-2', fee: { csi: '150', nonCsi: '200' } },
+  { title: 'Memes Challenge', category: 'Non-Technical', teamSize: '1-2', fee: { csi: '150', nonCsi: '200' } },
+  { title: 'Musical Ball Tag', category: 'Non-Technical', teamSize: '1-2', fee: { csi: '150', nonCsi: '200' } },
+  { title: 'Dance Diwana', category: 'Non-Technical', teamSize: '1-2', fee: { csi: '150', nonCsi: '200' } },
+  { title: 'Free Fire Tournament', category: 'Non-Technical', teamSize: '1-2', fee: { csi: '150', nonCsi: '200' } }
 ];
 
 // Component for Department icon
@@ -82,8 +83,41 @@ const initialFormData = {
   section: '',
   department: '',
   year: '',
-  events: [] as string[],
-  teamMembers: ['', ''] as string[]
+  event: '',
+  teamMembers: ['', ''] as string[],
+  isCsiMember: false
+};
+
+// Calculate total fee based on selected event and CSI membership
+const calculateTotalFee = (eventTitle: string, isCsiMember: boolean) => {
+  const event = allEvents.find(e => e.title === eventTitle);
+  if (!event) return 0;
+
+  if (eventTitle === 'DevDash') {
+    return 100; // Base price for DevDash
+  } else if (eventTitle === 'Freshman Code Cup') {
+    return 150; // Fixed price for FCC
+  } else {
+    return isCsiMember ? parseInt(event.fee.csi) : parseInt(event.fee.nonCsi);
+  }
+};
+
+// Payment links corresponding to registration fees
+const paymentLinks = {
+  '100': 'https://rzp.io/rzp/dP0iFi4',
+  '150': 'https://rzp.io/rzp/H0Y67rp7',
+  '200': 'https://rzp.io/rzp/R2VOomIW'
+};
+
+// Function to get the payment link based on total fee
+const getPaymentLink = (totalFee: number) => {
+  if (totalFee <= 100) {
+    return paymentLinks['100'];
+  } else if (totalFee <= 150) {
+    return paymentLinks['150'];
+  } else {
+    return paymentLinks['200'];
+  }
 };
 
 export function RegistrationPage() {
@@ -92,16 +126,20 @@ export function RegistrationPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [totalFee, setTotalFee] = useState(0);
+
+  // Update total fee when event or CSI membership changes
+  useEffect(() => {
+    const fee = calculateTotalFee(formData.event, formData.isCsiMember);
+    setTotalFee(fee);
+  }, [formData.event, formData.isCsiMember]);
 
   // Handle event selection
   const handleEventChange = (eventName: string) => {
-    setFormData(prev => {
-      if (prev.events.includes(eventName)) {
-        return { ...prev, events: prev.events.filter(e => e !== eventName) };
-      } else {
-        return { ...prev, events: [...prev.events, eventName] };
-      }
-    });
+    setFormData(prev => ({
+      ...prev,
+      event: eventName
+    }));
   };
 
   // Handle form submission
@@ -112,7 +150,8 @@ export function RegistrationPage() {
       setIsSubmitting(true);
       setSubmitError(null);
       
-      console.log('Submitting registration data:', {
+      // Prepare data in format matching Supabase table columns
+      const registrationData = {
         name: formData.name,
         email: formData.email,
         phone: formData.phone,
@@ -121,25 +160,17 @@ export function RegistrationPage() {
         section: formData.section,
         department: formData.department,
         year: formData.year,
-        events: formData.events,
-        team_members: formData.teamMembers.filter(Boolean)
-      });
+        event: formData.event,
+        team_members: formData.teamMembers.filter(Boolean),
+        is_csi_member: formData.isCsiMember
+      };
       
-      // Insert into Supabase - with all required fields
+      console.log('Submitting registration data:', registrationData);
+      
+      // Insert into Supabase with correct column names
       const { error } = await supabase
         .from('registrations')
-        .insert([{
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone,
-          college: formData.college,
-          roll_number: formData.rollNumber,
-          section: formData.section,
-          department: formData.department,
-          year: formData.year,
-          events: formData.events,
-          team_members: formData.teamMembers.filter(Boolean)
-        }]);
+        .insert([registrationData]);
       
       if (error) throw error;
       
@@ -160,12 +191,13 @@ export function RegistrationPage() {
               email: formData.email,
               phone: formData.phone,
               college: formData.college,
-              rollNumber: formData.rollNumber,
+              roll_number: formData.rollNumber,
               section: formData.section,
               department: formData.department,
               year: formData.year,
-              events: formData.events,
-              teamMembers: formData.teamMembers.filter(Boolean)
+              event: formData.event,
+              team_members: formData.teamMembers.filter(Boolean),
+              is_csi_member: formData.isCsiMember
             },
             adminEmail: 'azura2025@gmail.com' // Replace with your actual admin email
           })
@@ -199,12 +231,13 @@ export function RegistrationPage() {
               email: formData.email,
               phone: formData.phone,
               college: formData.college,
-              rollNumber: formData.rollNumber,
+              roll_number: formData.rollNumber,
               section: formData.section,
               department: formData.department,
               year: formData.year,
-              events: formData.events.join(', '),
-              teamMembers: formData.teamMembers.filter(Boolean).join(', ')
+              event: formData.event,
+              team_members: formData.teamMembers.filter(Boolean).join(', '),
+              is_csi_member: formData.isCsiMember
             }
           })
         });
@@ -239,6 +272,146 @@ export function RegistrationPage() {
       setIsSubmitting(false);
     }
   };
+
+  // Replace the handlePayment function with this updated version
+  const handlePayment = async () => {
+    try {
+      setIsSubmitting(true);
+      console.log('Preparing registration data...', formData);
+      
+      // Calculate total fee
+      const totalFee = calculateTotalFee(formData.event, formData.isCsiMember);
+      
+      // Prepare the data to match the exact Supabase table columns
+      const pendingRegistrationData = {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        college: formData.college,
+        roll_number: formData.rollNumber,
+        section: formData.section,
+        department: formData.department,
+        year: formData.year,
+        event: formData.event,
+        team_members: formData.teamMembers.filter(Boolean),
+        is_csi_member: formData.isCsiMember,
+        registration_fee: totalFee,
+        status: 'pending',
+        session_id: Date.now().toString(36) + Math.random().toString(36).substr(2)
+      };
+      
+      console.log('Storing pending registration data in localStorage:', pendingRegistrationData);
+      
+      // Store the full registration data in localStorage
+      localStorage.setItem('azura_pending_registration', JSON.stringify(pendingRegistrationData));
+      
+      // Redirect to payment
+      const paymentLink = getPaymentLink(totalFee);
+      if (paymentLink) {
+        // Redirect to the payment page - add callback URL
+        const redirectUrl = `${paymentLink}?callback_url=${window.location.origin}/payment-success`;
+        console.log('Redirecting to payment:', redirectUrl);
+        window.location.href = redirectUrl;
+      } else {
+        console.error('No payment link available for amount:', totalFee);
+        toast.error('Payment link not found for the selected amount.');
+        setIsSubmitting(false);
+      }
+    } catch (error) {
+      console.error('Error during payment process:', error);
+      toast.error('Payment process failed. Please try again.');
+      setIsSubmitting(false);
+    }
+  };
+
+  // Function to handle payment success and process registration
+  const handlePaymentSuccess = async (paymentId: string) => {
+    try {
+      // Retrieve stored registration data
+      const storedData = localStorage.getItem('azura_pending_registration');
+      if (!storedData) {
+        console.error('No registration data found in local storage');
+        toast.error('Registration data not found. Please try again.');
+        return;
+      }
+      
+      const registrationData = JSON.parse(storedData);
+      
+      // Add payment information
+      registrationData.payment_id = paymentId;
+      registrationData.payment_status = 'completed';
+      
+      console.log('Processing successful payment for registration:', registrationData);
+      
+      // Insert data into Supabase registrations table
+      const { data, error } = await supabase
+        .from('registrations')
+        .insert([registrationData]);
+        
+      if (error) {
+        console.error('Error inserting data into Supabase:', error);
+        toast.error('Registration failed: ' + error.message);
+        return;
+      }
+      
+      console.log('Registration data saved to Supabase:', data);
+      
+      // Send email notifications
+      try {
+        console.log('Sending email notification...');
+        const emailResponse = await fetch('/api/send-email', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            registration: registrationData, 
+            recipientEmail: 'azura2025@gmail.com' // Admin email
+          })
+        });
+        
+        if (!emailResponse.ok) {
+          const errorText = await emailResponse.text();
+          console.warn('Failed to send email notification:', errorText);
+        } else {
+          console.log('Email notification sent successfully');
+        }
+      } catch (emailError) {
+        console.error('Error sending email notification:', emailError);
+      }
+      
+      // Clear stored registration data
+      localStorage.removeItem('azura_pending_registration');
+      localStorage.removeItem('azura_payment_session');
+      
+      // Success notification
+      toast.success('Registration and payment successful!');
+      
+      // Reset form and show success
+      setFormData(initialFormData);
+      setActiveStep(1);
+      setSubmitSuccess(true);
+      
+    } catch (error) {
+      console.error('Error processing registration after payment:', error);
+      toast.error('Failed to complete registration. Please contact support.');
+    }
+  };
+
+  // Check for payment success on component mount
+  useEffect(() => {
+    // Check URL for payment_id parameter (this would typically come from Razorpay callback)
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentId = urlParams.get('razorpay_payment_id');
+    
+    if (paymentId) {
+      console.log('Detected payment ID in URL:', paymentId);
+      handlePaymentSuccess(paymentId);
+      
+      // Remove the payment ID from the URL to prevent duplicate processing
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 pt-24 pb-16">
@@ -363,6 +536,24 @@ export function RegistrationPage() {
                     </div>
                   </div>
 
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-indigo-200">
+                      CSI Membership
+                    </label>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="isCsiMember"
+                        checked={formData.isCsiMember}
+                        onChange={(e) => setFormData({ ...formData, isCsiMember: e.target.checked })}
+                        className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
+                      />
+                      <label htmlFor="isCsiMember" className="text-sm text-indigo-200">
+                        I am a CSI member
+                      </label>
+                    </div>
+                  </div>
+
                   <div className="flex justify-end">
                     <motion.button
                       whileHover={{ scale: 1.02 }}
@@ -476,7 +667,7 @@ export function RegistrationPage() {
                   className="space-y-6"
                 >
                   <div>
-                    <h2 className="text-2xl font-semibold text-white mb-4">Select Events</h2>
+                    <h2 className="text-2xl font-semibold text-white mb-4">Select Event</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {allEvents.map((event) => (
                         <motion.div
@@ -484,7 +675,7 @@ export function RegistrationPage() {
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
                           className={`p-4 rounded-lg border cursor-pointer transition-colors ${
-                            formData.events.includes(event.title)
+                            formData.event === event.title
                               ? 'bg-gradient-to-r from-indigo-500/30 to-purple-500/30 border-indigo-500'
                               : 'bg-white/5 border-white/10 hover:border-indigo-500/50'
                           }`}
@@ -493,14 +684,18 @@ export function RegistrationPage() {
                           <div className="flex items-center justify-between">
                             <div className="flex items-center">
                               <input
-                                type="checkbox"
-                                checked={formData.events.includes(event.title)}
+                                type="radio"
+                                checked={formData.event === event.title}
                                 onChange={() => {}}
-                                className="w-5 h-5 text-indigo-500 rounded border-gray-300 focus:ring-indigo-500"
+                                className="w-5 h-5 text-indigo-500 border-gray-300 focus:ring-indigo-500"
                               />
                               <div className="ml-3">
                                 <span className="block font-medium text-white">{event.title}</span>
                                 <span className="block text-sm text-indigo-300">{event.category}</span>
+                                <div className="mt-1 text-xs text-indigo-400">
+                                  <span>Team Size: {event.teamSize}</span>
+                                  <span className="ml-3">Fee: ₹{formData.isCsiMember ? event.fee.csi : event.fee.nonCsi}/-</span>
+                                </div>
                               </div>
                             </div>
                           </div>
@@ -524,7 +719,8 @@ export function RegistrationPage() {
                       whileTap={{ scale: 0.98 }}
                       type="button"
                       onClick={() => setActiveStep(4)}
-                      className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg hover:from-indigo-600 hover:to-purple-600 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2 focus:ring-offset-indigo-900"
+                      disabled={!formData.event}
+                      className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg hover:from-indigo-600 hover:to-purple-600 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2 focus:ring-offset-indigo-900 disabled:opacity-50"
                     >
                       Next Step
                     </motion.button>
@@ -541,52 +737,33 @@ export function RegistrationPage() {
                   className="space-y-6"
                 >
                   <div>
-                    <h2 className="text-2xl font-semibold text-white mb-6">Team Details</h2>
-                    <p className="text-indigo-200 mb-6">
-                      If you're participating as a team, please add your team members below.
-                      Leave empty if you're participating individually.
-                    </p>
-                    
-                    <div className="space-y-4">
-                      {formData.teamMembers.map((member, index) => (
-                        <div key={index} className="relative">
-                          <Users className="absolute left-3 top-1/2 -translate-y-1/2 text-indigo-300 w-5 h-5" />
-                          <input
-                            type="text"
-                            placeholder={`Team Member ${index + 1} Name`}
-                            value={member}
-                            onChange={(e) => {
-                              const newTeamMembers = [...formData.teamMembers];
-                              newTeamMembers[index] = e.target.value;
-                              setFormData(prev => ({ ...prev, teamMembers: newTeamMembers }));
-                            }}
-                            className="w-full pl-10 pr-4 py-3 rounded-lg bg-white/5 border border-indigo-500/20 text-white placeholder-indigo-300/50 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                          />
-                        </div>
-                      ))}
+                    <h2 className="text-2xl font-semibold text-white mb-4">Payment Summary</h2>
+                    <div className="bg-white/5 backdrop-blur-sm rounded-lg p-6 space-y-4">
+                      <div className="flex justify-between items-center">
+                        <span className="text-indigo-200">Selected Event:</span>
+                        <span className="text-white">{formData.event}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-indigo-200">Membership Type:</span>
+                        <span className="text-white">{formData.isCsiMember ? 'CSI Member' : 'Non-CSI Member'}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-lg font-semibold">
+                        <span className="text-indigo-200">Total Amount:</span>
+                        <span className="text-white">₹{totalFee}/-</span>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="flex justify-between">
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      type="button"
-                      onClick={() => setActiveStep(3)}
-                      className="px-6 py-3 bg-white/10 text-white rounded-lg hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/20 focus:ring-offset-2 focus:ring-offset-indigo-900"
-                    >
-                      Previous Step
-                    </motion.button>
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      type="submit"
-                      disabled={isSubmitting}
-                      className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg hover:from-indigo-600 hover:to-purple-600 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2 focus:ring-offset-indigo-900 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isSubmitting ? 'Registering...' : 'Complete Registration'}
-                    </motion.button>
-                  </div>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={handlePayment}
+                    disabled={isSubmitting}
+                    className="w-full py-3 px-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg font-medium flex items-center justify-center space-x-2 disabled:opacity-50"
+                  >
+                    <CreditCard className="w-5 h-5" />
+                    <span>Proceed to Payment</span>
+                  </motion.button>
                 </motion.div>
               )}
 

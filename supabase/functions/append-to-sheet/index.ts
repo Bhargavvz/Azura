@@ -8,23 +8,50 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight request
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders, status: 200 });
+    return new Response('ok', { headers: corsHeaders });
   }
 
   try {
-    // Log environment variable presence for debugging
-    console.log('Environment variables check:');
-    console.log('- GOOGLE_SHEET_ID exists:', !!Deno.env.get('GOOGLE_SHEET_ID'));
-    console.log('- GOOGLE_CLIENT_EMAIL exists:', !!Deno.env.get('GOOGLE_CLIENT_EMAIL'));
-    console.log('- GOOGLE_PRIVATE_KEY exists:', !!Deno.env.get('GOOGLE_PRIVATE_KEY'));
-    
-    const { registration } = await req.json();
-    
-    // Log the received registration data
-    console.log('Received registration data for Google Sheets:', registration);
+    // Log environment variables (without exposing secrets)
+    console.log('Checking environment variables...');
+    console.log('GOOGLE_SHEET_ID exists:', !!Deno.env.get('GOOGLE_SHEET_ID'));
+    console.log('GOOGLE_CLIENT_EMAIL exists:', !!Deno.env.get('GOOGLE_CLIENT_EMAIL'));
+    console.log('GOOGLE_PRIVATE_KEY exists:', !!Deno.env.get('GOOGLE_PRIVATE_KEY'));
 
+    if (!Deno.env.get('GOOGLE_SHEET_ID') || !Deno.env.get('GOOGLE_CLIENT_EMAIL') || !Deno.env.get('GOOGLE_PRIVATE_KEY')) {
+      console.error('Missing Google Sheets credentials');
+      throw new Error('Missing Google Sheets credentials');
+    }
+
+    // Log request headers
+    console.log('Request headers:', Object.fromEntries(req.headers.entries()));
+
+    // Log request body
+    const { registration } = await req.json();
+    console.log('Registration data:', {
+      name: registration.name,
+      email: registration.email,
+      phone: registration.phone,
+      college: registration.college,
+      events: registration.events,
+      csi: registration.csi,
+      paymentId: registration.paymentId
+    });
+
+    if (!registration || !registration.name || !registration.email || !registration.phone || !registration.college || !registration.events || !registration.paymentId) {
+      console.error('Missing required fields:', {
+        name: !!registration?.name,
+        email: !!registration?.email,
+        phone: !!registration?.phone,
+        college: !!registration?.college,
+        events: !!registration?.events,
+        paymentId: !!registration?.paymentId
+      });
+      throw new Error('Missing required fields in registration data');
+    }
+    
     // Get Sheet ID from environment
     const sheetId = Deno.env.get('GOOGLE_SHEET_ID');
     if (!sheetId) {
@@ -118,10 +145,16 @@ serve(async (req) => {
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
-    console.error('Error in append-to-sheet function:', error);
+    console.error('Error appending to sheet:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({ 
+        error: error.message,
+        details: error.toString()
+      }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      },
     );
   }
 });
