@@ -102,22 +102,21 @@ const calculateTotalFee = (eventTitle: string, isCsiMember: boolean) => {
   }
 };
 
-// Payment links corresponding to registration fees
-const paymentLinks = {
-  '100': 'https://rzp.io/rzp/dP0iFi4',
-  '150': 'https://rzp.io/rzp/H0Y67rp7',
-  '200': 'https://rzp.io/rzp/R2VOomIW'
-};
-
-// Function to get the payment link based on total fee
+// Function to get the complete payment link with callback URL
 const getPaymentLink = (totalFee: number) => {
+  // Get the base payment link
+  let baseLink: string;
   if (totalFee <= 100) {
-    return paymentLinks['100'];
+    baseLink = 'https://rzp.io/rzp/9C130EsO';
   } else if (totalFee <= 150) {
-    return paymentLinks['150'];
+    baseLink = 'https://rzp.io/rzp/umyUAt4R';
   } else {
-    return paymentLinks['200'];
+    baseLink = 'https://rzp.io/rzp/XeMYY9O';
   }
+  
+  // Add callback URL
+  const callbackUrl = `${window.location.origin}/payment-success`;
+  return `${baseLink}${baseLink.includes('?') ? '&' : '?'}callback_url=${encodeURIComponent(callbackUrl)}`;
 };
 
 export function RegistrationPage() {
@@ -308,10 +307,8 @@ export function RegistrationPage() {
       // Redirect to payment
       const paymentLink = getPaymentLink(totalFee);
       if (paymentLink) {
-        // Redirect to the payment page - add callback URL
-        const redirectUrl = `${paymentLink}?callback_url=${window.location.origin}/payment-success`;
-        console.log('Redirecting to payment:', redirectUrl);
-        window.location.href = redirectUrl;
+        console.log('Redirecting to payment:', paymentLink);
+        window.location.href = paymentLink;
       } else {
         console.error('No payment link available for amount:', totalFee);
         toast.error('Payment link not found for the selected amount.');

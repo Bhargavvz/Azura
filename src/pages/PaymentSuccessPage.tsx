@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams, useLocation } from 'react-router-dom';
 import { createClient } from '@supabase/supabase-js';
 import { motion } from 'framer-motion';
 import { CheckCircle, XCircle, ArrowLeft, Loader2 } from 'lucide-react';
+import { toast, Toaster } from 'react-hot-toast';
 
 // Initialize Supabase client
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
@@ -11,8 +12,10 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 export function PaymentSuccessPage() {
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('Verifying your payment...');
+  const [debugInfo, setDebugInfo] = useState<any>({});
   const [paymentDetails, setPaymentDetails] = useState<{
     paymentId?: string;
     event?: string;
@@ -22,11 +25,33 @@ export function PaymentSuccessPage() {
   useEffect(() => {
     async function verifyPaymentAndComplete() {
       try {
-        // Get payment ID from URL
-        const paymentId = searchParams.get('razorpay_payment_id');
-        const paymentReference = searchParams.get('razorpay_order_id');
+        // Collect all URL parameters for debugging
+        const allParams: Record<string, string> = {};
+        searchParams.forEach((value, key) => {
+          allParams[key] = value;
+        });
+        
+        console.log('All URL parameters:', allParams);
+        setDebugInfo(prev => ({ ...prev, urlParams: allParams }));
+
+        // Get payment ID from URL - try different parameter names that Razorpay might use
+        const paymentId = 
+          searchParams.get('razorpay_payment_id') || 
+          searchParams.get('payment_id') || 
+          allParams.razorpay_payment_id;
+        
+        const paymentReference = 
+          searchParams.get('razorpay_order_id') || 
+          searchParams.get('order_id') ||
+          allParams.razorpay_order_id;
         
         if (!paymentId) {
+          console.error('No payment ID found in URL params:', location.search);
+          setDebugInfo(prev => ({ 
+            ...prev, 
+            error: 'No payment ID found', 
+            searchString: location.search 
+          }));
           setStatus('error');
           setMessage('Payment ID not found in the URL. Your payment might not have been completed.');
           return;
@@ -38,15 +63,34 @@ export function PaymentSuccessPage() {
         // Get stored pending registration info
         const storedInfo = localStorage.getItem('azura_pending_registration');
         if (!storedInfo) {
+          console.error('No registration data found in localStorage');
+          setDebugInfo(prev => ({ ...prev, error: 'No registration data in localStorage' }));
           setStatus('error');
           setMessage('Registration data not found. Please contact support with your payment ID.');
           return;
         }
         
-        // Parse stored registration info
-        const pendingReg = JSON.parse(storedInfo);
+        // Try parsing the stored registration info
+        let pendingReg;
+        try {
+          pendingReg = JSON.parse(storedInfo);
+          console.log('Successfully parsed registration data from localStorage:', pendingReg);
+          setDebugInfo(prev => ({ ...prev, pendingRegFound: true }));
+        } catch (e) {
+          console.error('Error parsing registration data:', e, storedInfo);
+          setDebugInfo(prev => ({ 
+            ...prev, 
+            error: 'Failed to parse registration data', 
+            storedData: storedInfo 
+          }));
+          setStatus('error');
+          setMessage('Registration data is corrupted. Please contact support with your payment ID.');
+          return;
+        }
         
         if (!pendingReg || !pendingReg.email) {
+          console.error('Incomplete registration data:', pendingReg);
+          setDebugInfo(prev => ({ ...prev, error: 'Incomplete registration data', pendingReg }));
           setStatus('error');
           setMessage('Incomplete registration data. Please contact support with your payment ID.');
           return;
@@ -78,22 +122,50 @@ export function PaymentSuccessPage() {
           payment_status: 'completed'
         };
         
+        console.log('About to insert registration into Supabase:', registrationData);
+        setDebugInfo(prev => ({ ...prev, registrationData }));
+        
         // Insert into main registrations table
-        const { error: insertError } = await supabase
+        const { data, error: insertError } = await supabase
           .from('registrations')
           .insert([registrationData]);
           
         if (insertError) {
-          console.error('Error creating final registration:', insertError);
+          console.error('Error inserting registration into Supabase:', insertError);
+          setDebugInfo(prev => ({ 
+            ...prev, 
+            supabaseError: insertError,
+            supabaseErrorMessage: insertError.message,
+          }));
+          
+          // Try to create a fallback record to not lose the payment
+          try {
+            // Store in localStorage as backup
+            localStorage.setItem(
+              `azura_completed_payment_${paymentId}`, 
+              JSON.stringify({ 
+                ...registrationData, 
+                failedToSave: true, 
+                errorMessage: insertError.message 
+              })
+            );
+            console.log('Stored failed registration in localStorage as backup');
+            setDebugInfo(prev => ({ ...prev, backupSaved: true }));
+          } catch (backupError) {
+            console.error('Error saving backup:', backupError);
+          }
+          
           setStatus('error');
-          setMessage('Error saving your registration. Please contact support with your payment ID.');
+          setMessage(`Error saving your registration (${insertError.message}). Please contact support with your payment ID.`);
           return;
         }
         
-        console.log('Registration saved to Supabase successfully');
+        console.log('Registration saved to Supabase successfully:', data);
+        setDebugInfo(prev => ({ ...prev, supabaseSaveSuccess: true }));
         
         // Send email notification
         try {
+          console.log('Attempting to send email notification');
           const emailResponse = await fetch('/api/send-email', {
             method: 'POST',
             headers: {
@@ -106,13 +178,20 @@ export function PaymentSuccessPage() {
           });
           
           if (!emailResponse.ok) {
-            console.warn('Email notification failed but registration was successful');
+            const errorText = await emailResponse.text();
+            console.warn('Email notification failed but registration was successful:', errorText);
+            setDebugInfo(prev => ({ ...prev, emailError: errorText }));
           } else {
             console.log('Email notification sent successfully');
+            setDebugInfo(prev => ({ ...prev, emailSent: true }));
           }
         } catch (emailError) {
           console.error('Error sending email notification:', emailError);
+          setDebugInfo(prev => ({ ...prev, emailError }));
         }
+        
+        // Display a toast notification for success
+        toast.success('Registration completed successfully!');
         
         // Clear stored registration data
         localStorage.removeItem('azura_pending_registration');
@@ -123,16 +202,18 @@ export function PaymentSuccessPage() {
         
       } catch (error) {
         console.error('Error processing payment success:', error);
+        setDebugInfo(prev => ({ ...prev, unexpectedError: error }));
         setStatus('error');
         setMessage('An error occurred while processing your payment. Please contact support.');
       }
     }
     
     verifyPaymentAndComplete();
-  }, [searchParams]);
+  }, [searchParams, location.search]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 pt-24 pb-16">
+      <Toaster />
       {/* Back Button */}
       <Link to="/" className="absolute top-8 left-8 text-indigo-300 hover:text-white transition-colors">
         <motion.div
@@ -203,7 +284,7 @@ export function PaymentSuccessPage() {
           {status === 'error' && (
             <>
               <XCircle className="w-16 h-16 mx-auto text-red-400 mb-6" />
-              <h2 className="text-2xl font-bold text-white mb-4">Payment Verification Failed</h2>
+              <h2 className="text-2xl font-bold text-white mb-4">Payment Verification Issue</h2>
               <p className="text-indigo-200 mb-6">{message}</p>
               
               {paymentDetails.paymentId && (
@@ -214,6 +295,13 @@ export function PaymentSuccessPage() {
                   </p>
                 </div>
               )}
+              
+              <div className="bg-white/5 rounded-lg p-4 mb-6 text-left overflow-auto max-h-60">
+                <h4 className="text-indigo-200 mb-2 font-medium">Debug Information:</h4>
+                <pre className="text-xs text-gray-300 font-mono whitespace-pre-wrap">
+                  {JSON.stringify(debugInfo, null, 2)}
+                </pre>
+              </div>
               
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link to="/register">
