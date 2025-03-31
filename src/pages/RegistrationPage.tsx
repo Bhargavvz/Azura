@@ -44,6 +44,32 @@ const allEvents = [
   { title: 'Free Fire Tournament', category: 'Non-Technical', teamSize: '1-2', fee: { csi: '150', nonCsi: '200' } }
 ];
 
+// Define event redirect links type
+type EventName = keyof typeof eventRedirectLinks;
+
+// Define event redirect links
+const eventRedirectLinks = {
+  'DevDash': 'https://dev-dash-omega.vercel.app/',
+  'Predict and Win': 'payment link',
+  'Blind Coding': 'https://docs.google.com/forms/d/e/1FAIpQLSefq0YoUAaXic_v0YnlQ2OU8vUI8DmDOeW5ncx4OHZc62heug/viewform',
+  'Tech Relay': 'https://docs.google.com/forms/d/e/1FAIpQLSfdlFCJmMeMC7dVifEXZjAE9vp0cPkniEGvvLr1MjsmeZpN7A/viewform',
+  'Freshman Code Cup': 'https://docs.google.com/forms/d/e/1FAIpQLScJW2VEMfO_2Tm9LiBJSC2qHNM1WNVxXW0Kp15vfeq4hCz5mg/viewform',
+  'Bug Hunt': 'payment link',
+  'Coding Premier League': 'https://docs.google.com/forms/d/e/1FAIpQLSdv8nF7zJz78rmtDox_0BRe_RZ1R0CE6J5sKfEdc-hwZqCoEA/viewform',
+  'Crack It Up 2.0': 'or not working',
+  'Poster Presentation with AI': 'https://docs.google.com/forms/d/e/1FAIpQLSfj0fpG9ZO0zcZ3WbLmBYBvApwWRliPCWygh7KpcqOF_k9nFA/viewform',
+  'PPT Presentation': 'payment link',
+  'Musical Feast': 'https://docs.google.com/forms/d/e/1FAIpQLSdaGaHKIyCAl70IfaQroYXD6M9zOOeQOCDZ9XYAUIQU_RswSw/viewform',
+  'Try Not to Laugh': 'Payment link',
+  'Wordless Wonder': 'https://docs.google.com/forms/d/e/1FAIpQLSf_a-BLHQVTry9RDU_pAui7LPl-GWQLWuG8ZDWZLCEbmr_FWg/viewform',
+  'Free Fire Tournament': 'https://docs.google.com/forms/d/e/1FAIpQLSdayA4dJFMMry5oOUxWx9nOZ9LhA9nyy5OPq5Z9ytB34asdGQ/viewform',
+  'Box Office Battle': 'https://docs.google.com/forms/d/e/1FAIpQLScWR5W7Tp7rzR5Khu9Oha05mXR5VspEUN2TaiHKNaiZ1jRzpQ/viewform',
+  'Meme Challenge': 'https://docs.google.com/forms/d/e/1FAIpQLSc36fAPRMXX4IN7batp3OWF1wPnx2gXyq7du667LL5a_nzJCg/viewform',
+  'Tech Treasure': 'https://docs.google.com/forms/d/e/1FAIpQLSeOP9tlcEmi_ZJkptawilXKYHtoPPQvBn7ndDj-CC8JWcPhfQ/viewform',
+  'Musical Ball Tag': 'https://docs.google.com/forms/d/e/1FAIpQLSfxTYsABluz8vO1OuB4tOLOKHFxKkKLmL1cRudmg7lU5PWNxA/viewform?pli=1',
+  'Dance Diwana': 'Payment link'
+} as const;
+
 // Component for Department icon
 function Dept(props: React.SVGProps<SVGSVGElement>): JSX.Element {
   return (
@@ -88,52 +114,14 @@ const initialFormData = {
   isCsiMember: false
 };
 
-// Calculate total fee based on selected event and CSI membership
-const calculateTotalFee = (eventTitle: string, isCsiMember: boolean) => {
-  const event = allEvents.find(e => e.title === eventTitle);
-  if (!event) return 0;
-
-  if (eventTitle === 'DevDash') {
-    return 100; // Base price for DevDash
-  } else if (eventTitle === 'Freshman Code Cup') {
-    return 150; // Fixed price for FCC
-  } else {
-    return isCsiMember ? parseInt(event.fee.csi) : parseInt(event.fee.nonCsi);
-  }
-};
-
-// Function to get the complete payment link with callback URL
-const getPaymentLink = (totalFee: number) => {
-  // Get the base payment link
-  let baseLink: string;
-  if (totalFee <= 100) {
-    baseLink = 'https://rzp.io/rzp/9C130EsO';
-  } else if (totalFee <= 150) {
-    baseLink = 'https://rzp.io/rzp/umyUAt4R';
-  } else {
-    baseLink = 'https://rzp.io/rzp/XeMYY9O';
-  }
-  
-  // Add callback URL
-  const callbackUrl = `${window.location.origin}/payment-success`;
-  return `${baseLink}${baseLink.includes('?') ? '&' : '?'}callback_url=${encodeURIComponent(callbackUrl)}`;
-};
-
 export function RegistrationPage() {
   const [formData, setFormData] = useState(initialFormData);
   const [activeStep, setActiveStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [totalFee, setTotalFee] = useState(0);
 
-  // Update total fee when event or CSI membership changes
-  useEffect(() => {
-    const fee = calculateTotalFee(formData.event, formData.isCsiMember);
-    setTotalFee(fee);
-  }, [formData.event, formData.isCsiMember]);
-
-  // Handle event selection
+  // Update handleEventChange function
   const handleEventChange = (eventName: string) => {
     setFormData(prev => ({
       ...prev,
@@ -272,17 +260,29 @@ export function RegistrationPage() {
     }
   };
 
-  // Replace the handlePayment function with this updated version
-  const handlePayment = async () => {
+  // Update handleRedirect function
+  const handleRedirect = async () => {
     try {
       setIsSubmitting(true);
-      console.log('Preparing registration data...', formData);
+      const redirectLink = eventRedirectLinks[formData.event as EventName];
       
-      // Calculate total fee
-      const totalFee = calculateTotalFee(formData.event, formData.isCsiMember);
-      
-      // Prepare the data to match the exact Supabase table columns
-      const pendingRegistrationData = {
+      if (!redirectLink) {
+        toast.error('No registration link available for this event.');
+        return;
+      }
+
+      if (redirectLink === 'payment link' || redirectLink === 'Payment link') {
+        toast.error('Please proceed to payment counter for registration.');
+        return;
+      }
+
+      if (redirectLink === 'or not working') {
+        toast.error('This event registration is currently not available.');
+        return;
+      }
+
+      // Prepare data for database
+      const registrationData = {
         name: formData.name,
         email: formData.email,
         phone: formData.phone,
@@ -293,122 +293,132 @@ export function RegistrationPage() {
         year: formData.year,
         event: formData.event,
         team_members: formData.teamMembers.filter(Boolean),
-        is_csi_member: formData.isCsiMember,
-        registration_fee: totalFee,
-        status: 'pending',
-        session_id: Date.now().toString(36) + Math.random().toString(36).substr(2)
+        is_csi_member: formData.isCsiMember
       };
-      
-      console.log('Storing pending registration data in localStorage:', pendingRegistrationData);
-      
-      // Store the full registration data in localStorage
-      localStorage.setItem('azura_pending_registration', JSON.stringify(pendingRegistrationData));
-      
-      // Redirect to payment
-      const paymentLink = getPaymentLink(totalFee);
-      if (paymentLink) {
-        console.log('Redirecting to payment:', paymentLink);
-        window.location.href = paymentLink;
-      } else {
-        console.error('No payment link available for amount:', totalFee);
-        toast.error('Payment link not found for the selected amount.');
-        setIsSubmitting(false);
+
+      // Save to Supabase
+      const { error } = await supabase
+        .from('registrations')
+        .insert([registrationData]);
+
+      if (error) {
+        console.error('Error saving to database:', error);
+        toast.error('Failed to save registration. Please try again.');
+        return;
       }
+
+      // Send email notifications
+      try {
+        // Send email to participant
+        const participantEmailResponse = await fetch('https://sitknuiapmvuobgjmhmd.supabase.co/functions/v1/send-email', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${supabaseKey}`
+          },
+          body: JSON.stringify({
+            to: formData.email,
+            subject: `AZURA 2025 - Registration Confirmation for ${formData.event}`,
+            html: `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <h2 style="color: #4F46E5;">AZURA 2025 Registration Confirmation</h2>
+                <p>Dear ${formData.name},</p>
+                <p>Thank you for registering for AZURA 2025! Your registration for ${formData.event} has been confirmed.</p>
+                
+                <h3 style="color: #4F46E5;">Registration Details:</h3>
+                <ul style="list-style: none; padding: 0;">
+                  <li><strong>Event:</strong> ${formData.event}</li>
+                  <li><strong>Name:</strong> ${formData.name}</li>
+                  <li><strong>Email:</strong> ${formData.email}</li>
+                  <li><strong>Phone:</strong> ${formData.phone}</li>
+                  <li><strong>College:</strong> ${formData.college}</li>
+                  <li><strong>Roll Number:</strong> ${formData.rollNumber}</li>
+                  <li><strong>Department:</strong> ${formData.department}</li>
+                  <li><strong>Year:</strong> ${formData.year}</li>
+                </ul>
+                
+                <p>Please proceed to complete your registration by clicking the link that will be provided after this confirmation.</p>
+                
+                <p style="margin-top: 20px;">Best regards,<br>AZURA 2025 Team</p>
+              </div>
+            `
+          })
+        });
+
+        // Send email to admin
+        const adminEmailResponse = await fetch('https://sitknuiapmvuobgjmhmd.supabase.co/functions/v1/send-email', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${supabaseKey}`
+          },
+          body: JSON.stringify({
+            to: 'azura2025@gmail.com',
+            subject: `New Registration: ${formData.event} - ${formData.name}`,
+            html: `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <h2 style="color: #4F46E5;">New Registration for AZURA 2025</h2>
+                
+                <h3 style="color: #4F46E5;">Registration Details:</h3>
+                <ul style="list-style: none; padding: 0;">
+                  <li><strong>Event:</strong> ${formData.event}</li>
+                  <li><strong>Name:</strong> ${formData.name}</li>
+                  <li><strong>Email:</strong> ${formData.email}</li>
+                  <li><strong>Phone:</strong> ${formData.phone}</li>
+                  <li><strong>College:</strong> ${formData.college}</li>
+                  <li><strong>Roll Number:</strong> ${formData.rollNumber}</li>
+                  <li><strong>Department:</strong> ${formData.department}</li>
+                  <li><strong>Year:</strong> ${formData.year}</li>
+                  <li><strong>CSI Member:</strong> ${formData.isCsiMember ? 'Yes' : 'No'}</li>
+                </ul>
+              </div>
+            `
+          })
+        });
+
+        if (!participantEmailResponse.ok || !adminEmailResponse.ok) {
+          console.warn('Failed to send some email notifications');
+        }
+      } catch (emailError) {
+        console.error('Error sending emails:', emailError);
+      }
+
+      // Add to Google Sheets
+      try {
+        console.log('Adding to Google Sheets...');
+        await fetch(`${supabaseUrl}/functions/v1/append-to-sheet`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${supabaseKey}`
+          },
+          body: JSON.stringify({
+            registration: {
+              ...registrationData,
+              team_members: registrationData.team_members.join(', ')
+            }
+          })
+        });
+      } catch (sheetError) {
+        console.error('Error updating sheet:', sheetError);
+      }
+
+      // Store form data in localStorage before redirecting
+      localStorage.setItem('registration_data', JSON.stringify(formData));
+      
+      // Show success message
+      toast.success('Registration saved successfully!');
+
+      // Redirect to the event-specific form
+      window.location.href = redirectLink;
+
     } catch (error) {
-      console.error('Error during payment process:', error);
-      toast.error('Payment process failed. Please try again.');
+      console.error('Registration error:', error);
+      toast.error('An error occurred during registration. Please try again.');
+    } finally {
       setIsSubmitting(false);
     }
   };
-
-  // Function to handle payment success and process registration
-  const handlePaymentSuccess = async (paymentId: string) => {
-    try {
-      // Retrieve stored registration data
-      const storedData = localStorage.getItem('azura_pending_registration');
-      if (!storedData) {
-        console.error('No registration data found in local storage');
-        toast.error('Registration data not found. Please try again.');
-        return;
-      }
-      
-      const registrationData = JSON.parse(storedData);
-      
-      // Add payment information
-      registrationData.payment_id = paymentId;
-      registrationData.payment_status = 'completed';
-      
-      console.log('Processing successful payment for registration:', registrationData);
-      
-      // Insert data into Supabase registrations table
-      const { data, error } = await supabase
-        .from('registrations')
-        .insert([registrationData]);
-        
-      if (error) {
-        console.error('Error inserting data into Supabase:', error);
-        toast.error('Registration failed: ' + error.message);
-        return;
-      }
-      
-      console.log('Registration data saved to Supabase:', data);
-      
-      // Send email notifications
-      try {
-        console.log('Sending email notification...');
-        const emailResponse = await fetch('/api/send-email', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            registration: registrationData, 
-            recipientEmail: 'azura2025@gmail.com' // Admin email
-          })
-        });
-        
-        if (!emailResponse.ok) {
-          const errorText = await emailResponse.text();
-          console.warn('Failed to send email notification:', errorText);
-        } else {
-          console.log('Email notification sent successfully');
-        }
-      } catch (emailError) {
-        console.error('Error sending email notification:', emailError);
-      }
-      
-      // Clear stored registration data
-      localStorage.removeItem('azura_pending_registration');
-      localStorage.removeItem('azura_payment_session');
-      
-      // Success notification
-      toast.success('Registration and payment successful!');
-      
-      // Reset form and show success
-      setFormData(initialFormData);
-      setActiveStep(1);
-      setSubmitSuccess(true);
-      
-    } catch (error) {
-      console.error('Error processing registration after payment:', error);
-      toast.error('Failed to complete registration. Please contact support.');
-    }
-  };
-
-  // Check for payment success on component mount
-  useEffect(() => {
-    // Check URL for payment_id parameter (this would typically come from Razorpay callback)
-    const urlParams = new URLSearchParams(window.location.search);
-    const paymentId = urlParams.get('razorpay_payment_id');
-    
-    if (paymentId) {
-      console.log('Detected payment ID in URL:', paymentId);
-      handlePaymentSuccess(paymentId);
-      
-      // Remove the payment ID from the URL to prevent duplicate processing
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
-  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 pt-24 pb-16">
@@ -734,33 +744,51 @@ export function RegistrationPage() {
                   className="space-y-6"
                 >
                   <div>
-                    <h2 className="text-2xl font-semibold text-white mb-4">Payment Summary</h2>
+                    <h2 className="text-2xl font-semibold text-white mb-4">Registration Summary</h2>
                     <div className="bg-white/5 backdrop-blur-sm rounded-lg p-6 space-y-4">
                       <div className="flex justify-between items-center">
                         <span className="text-indigo-200">Selected Event:</span>
                         <span className="text-white">{formData.event}</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-indigo-200">Membership Type:</span>
-                        <span className="text-white">{formData.isCsiMember ? 'CSI Member' : 'Non-CSI Member'}</span>
+                        <span className="text-indigo-200">Name:</span>
+                        <span className="text-white">{formData.name}</span>
                       </div>
-                      <div className="flex justify-between items-center text-lg font-semibold">
-                        <span className="text-indigo-200">Total Amount:</span>
-                        <span className="text-white">₹{totalFee}/-</span>
+                      <div className="flex justify-between items-center">
+                        <span className="text-indigo-200">Email:</span>
+                        <span className="text-white">{formData.email}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-indigo-200">Phone:</span>
+                        <span className="text-white">{formData.phone}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-indigo-200">College:</span>
+                        <span className="text-white">{formData.college}</span>
                       </div>
                     </div>
                   </div>
 
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={handlePayment}
-                    disabled={isSubmitting}
-                    className="w-full py-3 px-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg font-medium flex items-center justify-center space-x-2 disabled:opacity-50"
-                  >
-                    <CreditCard className="w-5 h-5" />
-                    <span>Proceed to Payment</span>
-                  </motion.button>
+                  <div className="flex justify-between">
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      type="button"
+                      onClick={() => setActiveStep(3)}
+                      className="px-6 py-3 bg-white/10 text-white rounded-lg hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/20 focus:ring-offset-2 focus:ring-offset-indigo-900"
+                    >
+                      Previous Step
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={handleRedirect}
+                      disabled={isSubmitting || !formData.event}
+                      className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg hover:from-indigo-600 hover:to-purple-600 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2 focus:ring-offset-indigo-900 disabled:opacity-50"
+                    >
+                      Complete Registration
+                    </motion.button>
+                  </div>
                 </motion.div>
               )}
 

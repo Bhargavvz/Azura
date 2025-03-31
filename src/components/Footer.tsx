@@ -122,7 +122,7 @@ export function Footer() {
                 <MapPin className="w-5 h-5 text-indigo-400 mt-0.5 flex-shrink-0" />
                 <div>
                   <p>CMR College of Engineering & Technology</p>
-                  <p>Department of Computer Science & Engineering</p>
+                  <p>Department of Computer Science & Technology</p>
                 </div>
               </div>
               
@@ -150,7 +150,7 @@ export function Footer() {
         >
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <p className="text-center text-indigo-300 text-sm">
-              © 2025 AZURA - Department of Computer Science & Engineering. All rights reserved.
+              © 2025 AZURA - Department of Computer Science & Technology. All rights reserved.
             </p>
             <div className="flex space-x-6 text-sm">
               <Link to="/privacy-policy" className="text-indigo-300 hover:text-white transition-colors">
