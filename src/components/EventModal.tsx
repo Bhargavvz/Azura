@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Users, Trophy, Calendar, Clock, Share2 } from 'lucide-react';
+import { X, Users, Trophy, Calendar, Clock, Share2, Phone } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface EventModalProps {
@@ -14,6 +14,12 @@ interface EventModalProps {
       csi: string;
       nonCsi: string;
     };
+    contacts?: {
+      name: string;
+      phone?: string;
+      link?: string;
+    }[];
+    registrationLink?: string;
   };
 }
 
@@ -108,37 +114,49 @@ export function EventModal({ isOpen, onClose, event }: EventModalProps) {
                     </div>
                   </div>
                 </div>
-                
-                {/* Schedule information */}
-                <div className="bg-indigo-500/10 rounded-xl p-4 mb-8 flex items-center space-x-3 border border-indigo-500/20">
-                  <Clock className="w-5 h-5 text-indigo-400" />
-                  <div>
-                    <span className="text-white font-medium">Time:</span>
-                    <span className="text-indigo-200 ml-2">10:00 AM - 4:00 PM</span>
-                  </div>
-                </div>
 
-                {/* Action buttons */}
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <Link to="/register" className="flex-1">
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      className="w-full py-3 px-6 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl text-white font-semibold hover:from-indigo-500 hover:to-purple-500 transition-all shadow-lg hover:shadow-indigo-500/30"
+                {/* Contact Information */}
+                {event.contacts && event.contacts.length > 0 && (
+                  <div className="mb-8">
+                    <h3 className="text-lg font-semibold text-white mb-4">Contact Coordinators</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {event.contacts.map((contact, index) => (
+                        <div key={index} className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10">
+                          <div className="flex items-center space-x-3">
+                            <div className="p-2 rounded-lg bg-indigo-500/20">
+                              <Phone className="w-5 h-5 text-indigo-400" />
+                            </div>
+                            <div>
+                              <p className="text-white font-medium">{contact.name}</p>
+                              {contact.phone && (
+                                <a href={`tel:${contact.phone}`} className="text-indigo-300 hover:text-indigo-200">
+                                  {contact.phone}
+                                </a>
+                              )}
+                              {contact.link && (
+                                <a href={contact.link} target="_blank" rel="noopener noreferrer" className="text-indigo-300 hover:text-indigo-200">
+                                  Join WhatsApp Group
+                                </a>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Registration Link */}
+                {event.registrationLink && (
+                  <div className="mt-8">
+                    <Link
+                      to="/register"
+                      className="inline-flex items-center justify-center w-full px-6 py-3 text-base font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
                     >
                       Register Now
-                    </motion.button>
-                  </Link>
-                  
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="flex-1 py-3 px-6 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-white font-semibold hover:bg-white/20 transition-all flex items-center justify-center gap-2"
-                  >
-                    <Share2 className="w-5 h-5" />
-                    <span>Share Event</span>
-                  </motion.button>
-                </div>
+                    </Link>
+                  </div>
+                )}
               </div>
             </div>
           </motion.div>
