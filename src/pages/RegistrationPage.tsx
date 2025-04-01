@@ -50,7 +50,7 @@ type EventName = keyof typeof eventRedirectLinks;
 // Define event redirect links
 const eventRedirectLinks = {
   'DevDash': 'https://dev-dash-omega.vercel.app/',
-  'Predict and Win': 'https://getupilink.com/upi/vibhasnarmeta@okicici',
+  'Predict and Win': 'https://docs.google.com/forms/d/e/1FAIpQLSeOiaU05VdgtI2pKMxq5ovimvzYBX3ABbm7DGhyNDUCDNbpWQ/viewform',
   'Blind Coding': 'https://docs.google.com/forms/d/e/1FAIpQLSefq0YoUAaXic_v0YnlQ2OU8vUI8DmDOeW5ncx4OHZc62heug/viewform',
   'Tech Relay': 'https://docs.google.com/forms/d/e/1FAIpQLSfdlFCJmMeMC7dVifEXZjAE9vp0cPkniEGvvLr1MjsmeZpN7A/viewform',
   'Freshman Code Cup': 'https://docs.google.com/forms/d/e/1FAIpQLScJW2VEMfO_2Tm9LiBJSC2qHNM1WNVxXW0Kp15vfeq4hCz5mg/viewform',
